@@ -1,0 +1,13 @@
+if (!require("RCurl")) install.packages("RCurl")
+library(RCurl)
+url <- "ftp://ftp.eol.ucar.edu/pub/archive/weather/foothills"
+
+filenames <- getURL(url, ftp.use.epsv = FALSE,dirlistonly = TRUE) 
+
+
+file_list <- getURL(url, dirlistonly = TRUE, ftp.use.epsv = FALSE, crlf = TRUE)
+file_list <- strsplit(file_list, "\r\n")[[1]]
+file_list
+
+
+download.file(filenames, "weather_data", mode = "wb")

@@ -1,0 +1,27 @@
+{
+    "id": "52BD9E3F",
+    "path": "~/Documents/vapor_pressure_analysis/daily_water_bp.Rmd",
+    "project_path": "daily_water_bp.Rmd",
+    "type": "r_markdown",
+    "hash": "0",
+    "contents": "",
+    "dirty": true,
+    "created": 1695673505092.0,
+    "source_on_save": false,
+    "relative_order": 2,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "10,0",
+        "scrollLine": "0",
+        "last_setup_crc32": "2b6c40fd1ed90bf"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1695670618,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1695673529696,
+    "read_only": false,
+    "read_only_alternatives": []
+}

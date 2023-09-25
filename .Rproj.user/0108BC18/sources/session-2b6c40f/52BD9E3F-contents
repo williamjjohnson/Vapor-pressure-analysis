@@ -1,0 +1,32 @@
+---
+title: "Water boiling point according to daily pressure"
+output: html_document
+date: "2023-09-25"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(ggplot2, ncdf4)
+```
+
+## Defining boiling point
+
+The boiling point of a substance is the temperature at which the vapor pressure 
+of that substance is equal to atmospheric pressure. This relationship can be 
+described with the Clausius-Clapeyron Equation.
+
+$ln(\frac{P_1}{P_2}) = \frac{\Delta H_{vap}}{R}(\frac{1}{T_2}-\frac{1}{T_1})$ 
+
+The enthalpy of vaporization of water $\Delta H_{vap} = 40.7 \frac{kJ}{mol}$
+and the gas constant $R = 8.3145 \frac{J}{mol K}$
+
+The vapor pressure of water is 1.0 atm at 373 K. We can use this known 
+relationship to calculate the daily boiling point of water with the 
+Clausius-Clapeyron Equation. NCAR records the daily atmospheric pressure in 
+units of inches of mercury. 1.0 atm = 29.9213 in Hg
+
+```{r cars}
+
+```
+
