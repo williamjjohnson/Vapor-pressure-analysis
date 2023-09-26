@@ -7,7 +7,7 @@ date: "2023-09-25"
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(ggplot2, dplyr, ncdf4)
+pacman::p_load(ggplot2,dplyr,stringr,lubridate,purrr,cowplot,ncdf4)
 ```
 
 ## Defining boiling point
@@ -22,15 +22,73 @@ The enthalpy of vaporization of water $\Delta H_{vap} = 40.7 \frac{kJ}{mol}$
 and the gas constant $R = 8.3145 \frac{J}{mol K}$
 
 The vapor pressure of water is 1.0 atm at 373 K. We can use this known 
-relationship to calculate the daily boiling point of water with the 
-Clausius-Clapeyron Equation. NCAR records the daily atmospheric pressure in 
-units of inches of mercury. 1.0 atm = 29.9213 in Hg
+relationship to calculate the daily boiling point of water with the
+Clausius-Clapeyron Equation. NCAR records atmospheric pressure at the Foothills
+Laboratory in Boulder, Colorado in units of hectopascals 1.0 atm = 1,013.25 hPa. 
+
+
+
+## Extracting pressure data
+
+2023 Weather data were extracted for this analysis from the foothills laboratory
+(ftp://ftp.eol.ucar.edu/pub/archive/weather/foothills).
+Data were processed for atmospheric pressure, recorded every five minutes.
 
 ```{r}
-nc_data <- nc_open("weather_data/flab.20230101.nc")
-t <- ncvar_get(nc_data, "time")
-pressure <- ncvar_get(nc_data, "pres")
-pressure_0101 <- tibble(time_seconds = t,
-                        pressure_hPa = pressure)
+file_names <- list.files(path = "weather_data/")
+pressure_data <- lapply(paste0("weather_data/", file_names), function(i){
+  date <- unlist(str_split(i, "\\."))[2]
+  nc_data <- nc_open(i)
+  t <- ncvar_get(nc_data, "time")
+  pressure <- ncvar_get(nc_data,"pres")
+  tibble(date = as_date(date),
+         time_sec = t,
+         pressure_hPa = pressure)}) %>% 
+  reduce(full_join, by = c("date","time_sec","pressure_hPa")) %>% 
+  mutate(date = date + seconds(time_sec)) %>% 
+  select(-time_sec)
+
+ggplot(data=pressure_data,aes(x=date,y=pressure_hPa)) +
+  geom_line() + theme_classic() + labs(y = 'Boiling Point (°F)', x = 'Date')
+``` 
+
+
+## Calculating boiling point according to atmospheric pressure
+
+To calculate the boiling point over time in Boulder, the Clausius-Clapeyron 
+equation can be rearranged to 
+
+$T_2 = \frac{1}{\frac{R}{\Delta H_{vap}} (\frac{P_1}{P_2}) + \frac{1}{T_1}}$
+
+By applying this equation to the NCAR dataset, we can determine the variation in
+the boiling point of water across 2023 (up to September). 
+```{r, fig.width=12}
+clausius_func_water <- function(pressure){
+  R <- 8.3145/1000
+  delta_H <- 40.7
+  1/((R/delta_H)*log(1013.25/pressure) + (1/373))
+}
+
+pressure_data <- pressure_data %>% 
+  mutate(date = date(date)) %>% 
+  group_by(date) %>% 
+  summarise(pressure_hPa = mean(pressure_hPa)) %>% 
+  mutate(boiling_point_K = clausius_func_water(pressure_hPa)) %>% 
+  mutate(boiling_point_F = (boiling_point_K - 273.15) * 1.8 + 32)
+  
+
+line_plot <- ggplot(data=pressure_data,aes(x=date,y=boiling_point_F)) +
+  geom_line() + theme_classic() + ylab('Boiling Point (°F)')
+boxplot <- ggplot(data=pressure_data,aes(y=boiling_point_F)) +
+  geom_boxplot() + scale_x_discrete() + theme_classic() + 
+  ylab('Boiling Point (°F)')
+plot_grid(line_plot,boxplot, rel_widths=c(2,1))
+
+mean <- mean(pressure_data$boiling_point_F)
+range <- max(pressure_data$boiling_point_F) - min(pressure_data$boiling_point_F)
 ```
+
+The average calculated boiling point across this time range is `r round(mean, 3)` 
+&deg;F, while the difference in minimum and maximum values is `r round(range, 3)`
+&deg;F
 
